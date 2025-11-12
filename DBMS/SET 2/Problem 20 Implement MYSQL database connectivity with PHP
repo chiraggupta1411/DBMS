@@ -1,0 +1,81 @@
+<?php
+// ----------------------------------------------------------------------
+// Problem 20: Implement MYSQL database connectivity with PHP.
+// Environment: PHP CLI (php q20_php_mysql_connect.php)
+// Requires: MySQL server running, PHP with mysqli extension
+// ----------------------------------------------------------------------
+
+// Database Configuration (UPDATE THESE)
+$servername = "localhost";
+$username = "root";       // Replace with your MySQL username
+$password = "your_password"; // Replace with your MySQL password
+$dbname = "test_db";      // Database name
+
+// Table Setup
+$tableName = "SampleUsers";
+
+// 1. Connection to MySQL Database
+$conn = new mysqli($servername, $username, $password);
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Create database if it doesn't exist
+$conn->query("CREATE DATABASE IF NOT EXISTS $dbname");
+$conn->select_db($dbname);
+
+echo "Successfully connected to and selected database: $dbname\n";
+
+// 2. DDL: Create a sample table
+$sql_create_table = "
+DROP TABLE IF EXISTS $tableName;
+CREATE TABLE $tableName (
+    id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(30) NOT NULL,
+    email VARCHAR(50),
+    age INT
+)";
+
+if ($conn->query($sql_create_table) === TRUE) {
+    echo "Table $tableName created successfully.\n";
+} else {
+    echo "Error creating table: " . $conn->error . "\n";
+}
+
+// 3. DML: Insert sample data
+$sql_insert = "
+INSERT INTO $tableName (name, email, age) VALUES
+('Chirag', 'chirag@example.com', 28),
+('Aryan', 'aryan@example.com', 22),
+('Aayush', 'aayush@example.com', 35);
+";
+
+if ($conn->multi_query($sql_insert) === TRUE) {
+    // Consume results from multi_query
+    do {
+        if ($conn->more_results()) $conn->next_result();
+    } while ($conn->more_results());
+    echo "Sample data inserted successfully.\n";
+} else {
+    echo "Error inserting data: " . $conn->error . "\n";
+}
+
+// 4. Query (Read) Data
+$sql_select = "SELECT id, name, email, age FROM $tableName WHERE age > 25";
+$result = $conn->query($sql_select);
+
+echo "\n--- Users Older Than 25 ---\n";
+
+if ($result->num_rows > 0) {
+    // Output data of each row
+    while($row = $result->fetch_assoc()) {
+        echo "ID: " . $row["id"]. " | Name: " . $row["name"]. " | Email: " . $row["email"]. " | Age: " . $row["age"] . "\n";
+    }
+} else {
+    echo "0 results\n";
+}
+
+// 5. Close connection
+$conn->close();
+?>
