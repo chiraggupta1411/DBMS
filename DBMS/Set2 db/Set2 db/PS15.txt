@@ -1,0 +1,136 @@
+Problem Statement 15 (Cursors) 
+Consider the following schema for Products table. 
+Products(Product_id, Product_Name, Product_Type, Price) 
+1. Write a parameterized cursor to display all products in the given price range of price and type ‘Apparel’.
+ Hint: Take the user input for minimum and maximum price for price range. 
+2. Write an explicit cursor to display information of all products with Price greater than 5000. 
+3. Write an implicit cursor to display the number of records affected by the update operation incrementing Price
+ of all products by 1000. 
+ ===========================================================
+ 
+ 🗂️ Step 1: Create Table
+
+CREATE TABLE Products (
+  Product_id INT PRIMARY KEY,
+  Product_Name VARCHAR(50),
+  Product_Type VARCHAR(30),
+  Price DECIMAL(10,2)
+);
+
+
+🧪 Sample Input Data
+
+INSERT INTO Products VALUES
+(1, 'T-Shirt', 'Apparel', 1200),
+(2, 'Jeans', 'Apparel', 2500),
+(3, 'Laptop', 'Electronics', 55000),
+(4, 'Shoes', 'Apparel', 1800),
+(5, 'Watch', 'Accessories', 7000),
+(6, 'Jacket', 'Apparel', 3200);
+===========================================================
+
+🔧 1. Parameterized Cursor (Apparel in price range)
+Stored Procedure
+sql
+DELIMITER //
+
+CREATE PROCEDURE Get_Apparel_By_PriceRange (
+  IN min_price DECIMAL(10,2),
+  IN max_price DECIMAL(10,2)
+)
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE p_id INT;
+  DECLARE p_name VARCHAR(50);
+  DECLARE p_type VARCHAR(30);
+  DECLARE p_price DECIMAL(10,2);
+
+  DECLARE cur CURSOR FOR
+    SELECT Product_id, Product_Name, Product_Type, Price
+    FROM Products
+    WHERE Product_Type = 'Apparel'
+      AND Price BETWEEN min_price AND max_price;
+
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+  read_loop: LOOP
+    FETCH cur INTO p_id, p_name, p_type, p_price;
+    IF done THEN
+      LEAVE read_loop;
+    END IF;
+    SELECT p_id AS Product_ID, p_name AS Product_Name, p_type AS Type, p_price AS Price;
+  END LOOP;
+  CLOSE cur;
+END;
+//
+
+DELIMITER ;
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Execute
+
+CALL Get_Apparel_By_PriceRange(1000, 3000);
+
+***********************************************************************
+🔍 2. Explicit Cursor (Price > 5000)
+Stored Procedure
+
+
+DELIMITER //
+
+CREATE PROCEDURE Show_Expensive_Products()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE p_id INT;
+  DECLARE p_name VARCHAR(50);
+  DECLARE p_type VARCHAR(30);
+  DECLARE p_price DECIMAL(10,2);
+
+  DECLARE cur CURSOR FOR
+    SELECT Product_id, Product_Name, Product_Type, Price
+    FROM Products
+    WHERE Price > 5000;
+
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+  read_loop: LOOP
+    FETCH cur INTO p_id, p_name, p_type, p_price;
+    IF done THEN
+      LEAVE read_loop;
+    END IF;
+    SELECT p_id AS Product_ID, p_name AS Product_Name, p_type AS Type, p_price AS Price;
+  END LOOP;
+  CLOSE cur;
+END;
+//
+
+DELIMITER ;
+
++++++++++++++++++++++++++++++++++++++++++++++
+Execute
+
+CALL Show_Expensive_Products();
+
+==========================================================================
+🔁 3. Implicit Cursor (Update + Row Count)
+Stored Procedure
+
+DELIMITER //
+
+CREATE PROCEDURE Update_Prices()
+BEGIN
+  UPDATE Products
+  SET Price = Price + 1000;
+
+  SELECT ROW_COUNT() AS Rows_Updated;
+END;
+//
+
+DELIMITER ;
++++++++++++++++++++++++++++++
+Execute
+
+CALL Update_Prices();
+
+*************************************************

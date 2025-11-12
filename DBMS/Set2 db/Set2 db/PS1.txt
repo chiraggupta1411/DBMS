@@ -1,0 +1,74 @@
+Problem Statement 1 (CRUD) 
+Create collection Student with fields as Roll_No, Name, Class, Marks, Address, Enrolled_Courses. 
+(Hint: One student can enrol in multiple courses. Use Array to store the names of courses enrolled) 
+I nsert 10 documents in the collection Student. Write the queries for following. 
+1. List the names of students who have enrolled in the course “DBMS”, “TOC”. 
+2. List the Roll numbers and class of students who have marks more than 50 or class as TE. 
+3. Update the entire record of roll_no A10. 
+4. Display the names of students having 3rd and 4th highest marks. 
+5. Delete the records of students having marks less than 20. 
+6. Delete only first record from the collection. 
+
+=================================================================
+
+// ----------------------------------------------------------
+// 1️⃣ Use / Create Database
+// ----------------------------------------------------------
+use StudentDB;
+
+// ----------------------------------------------------------
+// 2️⃣ Create Collection Student
+// ----------------------------------------------------------
+db.createCollection("Student");
+
+// ----------------------------------------------------------
+// 3️⃣ Insert 10 Sample Documents
+// ----------------------------------------------------------
+db.Student.insertMany([
+  { Roll_No: "A01", Name: "Amit Kumar", Class: "TE", Marks: 78, Address: "Mumbai", Enrolled_Courses: ["DBMS", "TOC", "OS"] },
+  { Roll_No: "A02", Name: "Riya Sharma", Class: "SE", Marks: 65, Address: "Delhi", Enrolled_Courses: ["DBMS", "Networking"] },
+  { Roll_No: "A03", Name: "Neha Singh", Class: "TE", Marks: 55, Address: "Bangalore", Enrolled_Courses: ["TOC", "AI"] },
+  { Roll_No: "A04", Name: "Raj Patel", Class: "BE", Marks: 45, Address: "Chennai", Enrolled_Courses: ["DBMS", "OS"] },
+  { Roll_No: "A05", Name: "Sara Khan", Class: "SE", Marks: 30, Address: "Pune", Enrolled_Courses: ["Networking", "AI"] },
+  { Roll_No: "A06", Name: "Vikram Desai", Class: "TE", Marks: 88, Address: "Mumbai", Enrolled_Courses: ["DBMS", "AI"] },
+  { Roll_No: "A07", Name: "Anita Rao", Class: "BE", Marks: 22, Address: "Hyderabad", Enrolled_Courses: ["TOC", "Networking"] },
+  { Roll_No: "A08", Name: "Manoj Kumar", Class: "SE", Marks: 15, Address: "Delhi", Enrolled_Courses: ["OS"] },
+  { Roll_No: "A09", Name: "Priya Sharma", Class: "TE", Marks: 92, Address: "Bangalore", Enrolled_Courses: ["DBMS", "TOC"] },
+  { Roll_No: "A10", Name: "Rohit Verma", Class: "BE", Marks: 60, Address: "Chennai", Enrolled_Courses: ["AI", "OS"] }
+]);
+
+// ----------------------------------------------------------
+// 4️⃣ Queries
+// ----------------------------------------------------------
+
+// 1️⃣ List the names of students enrolled in "DBMS" or "TOC"
+db.Student.find(
+  { Enrolled_Courses: { $in: ["DBMS", "TOC"] } },
+  { _id: 0, Name: 1 }
+);
+
+// 2️⃣ List Roll_No and Class of students with marks > 50 or Class = "TE"
+db.Student.find(
+  { $or: [ { Marks: { $gt: 50 } }, { Class: "TE" } ] },
+  { _id: 0, Roll_No: 1, Class: 1 }
+);
+
+// 3️⃣ Update entire record of Roll_No "A10"
+db.Student.updateOne(
+  { Roll_No: "A10" },
+  { $set: { Name: "Rohit Verma Updated", Class: "BE", Marks: 70, Address: "Pune", Enrolled_Courses: ["DBMS", "TOC"] } }
+);
+
+// 4️⃣ Display names of students having 3rd and 4th highest marks
+// Sort descending by Marks, skip first two, limit 2
+db.Student.find({}, { _id: 0, Name: 1, Marks: 1 })
+          .sort({ Marks: -1 })
+          .skip(2)
+          .limit(2);
+
+// 5️⃣ Delete records of students having Marks < 20
+db.Student.deleteMany({ Marks: { $lt: 20 } });
+
+// 6️⃣ Delete only the first record in the collection
+db.Student.deleteOne({});
+

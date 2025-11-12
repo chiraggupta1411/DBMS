@@ -1,0 +1,148 @@
+Problem Statement 6 (Procedures / Functions) 
+Employee( emp_id, dept_idemp_name, DoJ, salary, commission,job_title) 
+1. Consider the schema given above. Keep the commission column empty initially. Write a Stored Procedure to
+ record the employee commission based on following conditions. If salary is more than 10000 then commission
+ is 0.4%, if Salary is less than 10000 but experience is more than 10 years then 0.35%, if salary is less than 3000
+ then commission is 0.25%. In the remaining cases commission is 0.15%. 
+2. Write a PLSQL Function that takes department ID and returns the name of the manager of the department.
+
+=====================================================================================
+
+-- ----------------------------------------------------------
+-- 1️⃣ Drop and Create Database
+-- ----------------------------------------------------------
+DROP DATABASE IF EXISTS CompanyDB_Procedures;
+CREATE DATABASE CompanyDB_Procedures;
+USE CompanyDB_Procedures;
+
+-- ----------------------------------------------------------
+-- 2️⃣ Drop tables if exist
+-- ----------------------------------------------------------
+DROP TABLE IF EXISTS Employee;
+DROP TABLE IF EXISTS Department;
+DROP TABLE IF EXISTS Manager;
+
+-- ----------------------------------------------------------
+-- 3️⃣ Create Tables
+-- ----------------------------------------------------------
+CREATE TABLE Manager (
+    manager_id INT PRIMARY KEY AUTO_INCREMENT,
+    manager_name VARCHAR(50)
+);
+
+CREATE TABLE Department (
+    dept_id INT PRIMARY KEY AUTO_INCREMENT,
+    dept_name VARCHAR(50),
+    manager_id INT,
+    FOREIGN KEY (manager_id) REFERENCES Manager(manager_id)
+);
+
+CREATE TABLE Employee (
+    emp_id INT PRIMARY KEY AUTO_INCREMENT,
+    dept_id INT,
+    emp_name VARCHAR(50),
+    DoJ DATE,
+    salary DECIMAL(10,2),
+    commission DECIMAL(10,2) DEFAULT 0,
+    job_title VARCHAR(50),
+    FOREIGN KEY (dept_id) REFERENCES Department(dept_id)
+);
+
+-- ----------------------------------------------------------
+-- 4️⃣ Insert Sample Data
+-- ----------------------------------------------------------
+INSERT INTO Manager (manager_name) VALUES 
+('John Smith'), ('Lisa Jones'), ('Raj Singh');
+
+INSERT INTO Department (dept_name, manager_id) VALUES
+('IT', 1), ('HR', 2), ('Finance', 3);
+
+INSERT INTO Employee (dept_id, emp_name, DoJ, salary, job_title) VALUES
+(1, 'Amit Kumar', '2010-05-10', 12000, 'Developer'),
+(1, 'Riya Sharma', '2012-08-12', 9500, 'Analyst'),
+(2, 'Neha Singh', '2005-02-15', 2800, 'HR Executive'),
+(2, 'Raj Patel', '2008-09-20', 7000, 'HR Manager'),
+(3, 'Kiran Verma', '2015-03-05', 5000, 'Finance Executive');
+
+-- ----------------------------------------------------------
+-- 5️⃣ Stored Procedure to Calculate Commission
+-- ----------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE Calculate_Commission_Display()
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE v_emp_id INT;
+    DECLARE v_name VARCHAR(50);
+    DECLARE v_salary DECIMAL(10,2);
+    DECLARE v_doj DATE;
+    DECLARE v_experience INT;
+
+    -- Cursor for employees
+    DECLARE emp_cursor CURSOR FOR 
+        SELECT emp_id, emp_name, salary, DoJ FROM Employee;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN emp_cursor;
+
+    read_loop: LOOP
+        FETCH emp_cursor INTO v_emp_id, v_name, v_salary, v_doj;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        SET v_experience = TIMESTAMPDIFF(YEAR, v_doj, CURDATE());
+
+        IF v_salary > 10000 THEN
+            UPDATE Employee SET commission = v_salary * 0.004 WHERE emp_id = v_emp_id;
+        ELSEIF v_salary < 10000 AND v_experience > 10 THEN
+            UPDATE Employee SET commission = v_salary * 0.0035 WHERE emp_id = v_emp_id;
+        ELSEIF v_salary < 3000 THEN
+            UPDATE Employee SET commission = v_salary * 0.0025 WHERE emp_id = v_emp_id;
+        ELSE
+            UPDATE Employee SET commission = v_salary * 0.0015 WHERE emp_id = v_emp_id;
+        END IF;
+
+    END LOOP;
+
+    CLOSE emp_cursor;
+
+    -- Display all employees and commission after calculation
+    SELECT emp_id, emp_name AS Employee, salary, commission, job_title FROM Employee;
+END $$
+
+DELIMITER ;
+
+-- ----------------------------------------------------------
+-- 6️⃣ Function to get manager name by dept_id
+-- ----------------------------------------------------------
+DELIMITER $$
+
+CREATE FUNCTION Get_Manager_Name(p_dept_id INT)
+RETURNS VARCHAR(50)
+DETERMINISTIC
+BEGIN
+    DECLARE mgr_name VARCHAR(50);
+
+    SELECT m.manager_name INTO mgr_name
+    FROM Manager m
+    JOIN Department d ON m.manager_id = d.manager_id
+    WHERE d.dept_id = p_dept_id;
+
+    RETURN mgr_name;
+END $$
+
+DELIMITER ;
+
+-- ----------------------------------------------------------
+-- 7️⃣ Execute Procedure
+-- ----------------------------------------------------------
+CALL Calculate_Commission_Display();
+
+-- ----------------------------------------------------------
+-- 8️⃣ Example: Use Function
+-- ----------------------------------------------------------
+SELECT Get_Manager_Name(2) AS Manager_Name;
+
+

@@ -1,0 +1,156 @@
+Problem Statement 14 (DML USING MYSQL) 
+Create following tables using a given schema and insert appropriate data into the same:  
+Customer (CustID, Name, Cust_Address, Phone_no, Email_ID, Age)  
+Branch (Branch ID, Branch_Name, Address)  
+Account (Account_no, Branch ID, CustID, date_open, Account_type, Balance) 
+1. Modify the size of column “Email_Address” to 20 in Customer table. 
+2. Change the column “Email_Address” to Not Null in Customer table. 
+3. Display the total customers with the balance >50, 000 Rs. 
+4. Display average balance for account type=”Saving Account”. 
+5. Display the customer details that lives in Pune or name starts with ’A’. 
+6. Create a table Saving_Account with (Account_no, Branch ID, CustID, date_open,  Balance) using
+ Account Table. 
+7. Display the customer details Age wise with balance>=20,000Rs
+=========================================================================
+
+
+Here’s the **MySQL execution plan** for **Problem Statement 14 (DML USING MYSQL)** — complete with table creation, sample data, and all 7 queries.
+
+---
+
+## 🗂️ Step 1: Create Tables
+
+```sql
+CREATE TABLE Customer (
+  CustID INT PRIMARY KEY,
+  Name VARCHAR(50),
+  Cust_Address VARCHAR(100),
+  Phone_no VARCHAR(15),
+  Email_Address VARCHAR(30),
+  Age INT
+);
+
+CREATE TABLE Branch (
+  Branch_ID INT PRIMARY KEY,
+  Branch_Name VARCHAR(50),
+  Address VARCHAR(100)
+);
+
+CREATE TABLE Account (
+  Account_no INT PRIMARY KEY,
+  Branch_ID INT,
+  CustID INT,
+  date_open DATE,
+  Account_type VARCHAR(30),
+  Balance DECIMAL(10,2),
+  FOREIGN KEY (Branch_ID) REFERENCES Branch(Branch_ID),
+  FOREIGN KEY (CustID) REFERENCES Customer(CustID)
+);
+```
+
+---
+
+## 🧪 Sample Input Data
+
+
+INSERT INTO Customer VALUES
+(101, 'Amit Sharma', 'Pune', '9876543210', 'amit@gmail.com', 45),
+(102, 'Neha Patil', 'Mumbai', '9123456789', 'neha@gmail.com', 38),
+(103, 'Ravi Deshmukh', 'Pune', '9988776655', 'ravi@gmail.com', 29),
+(104, 'Anjali Mehta', 'Nashik', '9090909090', 'anjali@gmail.com', 41);
+
+INSERT INTO Branch VALUES
+(1, 'Main Branch', 'Pune'),
+(2, 'City Branch', 'Mumbai');
+
+INSERT INTO Account VALUES
+(1001, 1, 101, '2020-01-15', 'Saving Account', 60000),
+(1002, 2, 102, '2019-03-10', 'Current Account', 45000),
+(1003, 1, 103, '2021-07-20', 'Saving Account', 52000),
+(1004, 2, 104, '2022-05-05', 'Saving Account', 18000);
+
+
+---
+
+## 🔧 Query Solutions
+
+### 1️⃣ Modify size of `Email_Address` to 20
+
+
+ALTER TABLE Customer
+MODIFY COLUMN Email_Address VARCHAR(20);
+
+
+---
+
+### 2️⃣ Make `Email_Address` NOT NULL
+
+
+ALTER TABLE Customer
+MODIFY COLUMN Email_Address VARCHAR(20) NOT NULL;
+
+
+---
+
+### 3️⃣ Total customers with balance > 50,000
+
+
+SELECT COUNT(DISTINCT CustID) AS Total_Customers
+FROM Account
+WHERE Balance > 50000;
+
+
+---
+
+### 4️⃣ Average balance for “Saving Account”
+
+
+SELECT AVG(Balance) AS Avg_Saving_Balance
+FROM Account
+WHERE Account_type = 'Saving Account';
+
+
+---
+
+### 5️⃣ Customers in Pune or name starts with 'A'
+
+
+SELECT * FROM Customer
+WHERE Cust_Address = 'Pune'
+   OR Name LIKE 'A%';
+
+
+---
+
+### 6️⃣ Create `Saving_Account` table from `Account`
+
+
+CREATE TABLE Saving_Account AS
+SELECT Account_no, Branch_ID, CustID, date_open, Balance
+FROM Account
+WHERE Account_type = 'Saving Account';
+
+
+---
+
+### 7️⃣ Customer details age-wise with balance ≥ 20,000
+
+
+SELECT c.*
+FROM Customer c
+JOIN Account a ON c.CustID = a.CustID
+WHERE a.Balance >= 20000
+ORDER BY c.Age;
+
+
+---
+
+## 📘 Journal Theory (Condensed)
+
+- **ALTER TABLE** is used to modify column definitions.
+- **JOIN** helps combine related data across tables.
+- **LIKE 'A%'** filters names starting with 'A'.
+- **CREATE TABLE AS SELECT** copies filtered data into a new table.
+
+
+

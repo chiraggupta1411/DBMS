@@ -1,0 +1,137 @@
+Problem Statement 9 (Cursors) 
+Consider a table Employee with schema as Employee (Emp_id, Emp_Name,Salary).  
+1. Write an explicit cursor to display records of all employees with salary greater than 50,000. 
+2. Write a PL/SQL block of code using Implicit Cursor that will display total number of tuples in Employee
+ table. 
+3. Write a PL/SQL block of code using Parameterized Cursor that will display salary of employee id entered by
+ the user.
+ 
+================================================================================
+
+
+-- ----------------------------------------------------------
+-- Create Database and Table
+-- ----------------------------------------------------------
+CREATE DATABASE IF NOT EXISTS CompanyDB;
+USE CompanyDB;
+
+-- Drop table if it already exists
+DROP TABLE IF EXISTS Employee;
+
+-- Create Employee Table
+CREATE TABLE Employee (
+    Emp_id INT PRIMARY KEY AUTO_INCREMENT,
+    Emp_Name VARCHAR(50),
+    Salary DECIMAL(10,2)
+);
+
+-- ----------------------------------------------------------
+-- Insert Sample Data
+-- ----------------------------------------------------------
+INSERT INTO Employee (Emp_Name, Salary) VALUES
+('Amit', 45000),
+('Riya', 52000),
+('Kiran', 61000),
+('Neha', 48000),
+('Rohit', 75000),
+('Priya', 90000),
+('Vivek', 35000),
+('Tina', 51000);
+
+------------------------------------------------------------
+-- 1️⃣  Explicit Cursor: display employees with salary > 50,000
+-- ----------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE Show_High_Salary_Employees()
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE v_id INT;
+    DECLARE v_name VARCHAR(50);
+    DECLARE v_salary DECIMAL(10,2);
+
+    -- Declare cursor
+    DECLARE emp_cursor CURSOR FOR
+        SELECT Emp_id, Emp_Name, Salary FROM Employee WHERE Salary > 50000;
+
+    -- Declare handler for end of cursor
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN emp_cursor;
+
+    read_loop: LOOP
+        FETCH emp_cursor INTO v_id, v_name, v_salary;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+        SELECT CONCAT('Emp ID: ', v_id, ' | Name: ', v_name, ' | Salary: ', v_salary) AS Employee_Details;
+    END LOOP;
+
+    CLOSE emp_cursor;
+END $$
+
+DELIMITER ;
+
+-- Run the procedure
+CALL Show_High_Salary_Employees();
+
+================================================================================
+-- ----------------------------------------------------------
+-- 2️⃣  Implicit Cursor: display total number of tuples
+-- ----------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE Count_Total_Employees()
+BEGIN
+    DECLARE total INT DEFAULT 0;
+
+    SELECT COUNT(*) INTO total FROM Employee;
+
+    SELECT CONCAT('Total number of employees: ', total) AS Result;
+END $$
+
+DELIMITER ;
+
+-- Run the procedure
+CALL Count_Total_Employees();
+
+===================================================================================
+-- ----------------------------------------------------------
+-- 3️⃣  Parameterized Cursor: display salary of a given Emp_id
+-- ----------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE Show_Salary_By_ID(IN p_emp_id INT)
+BEGIN
+    DECLARE v_emp_name VARCHAR(50);
+    DECLARE v_salary DECIMAL(10,2);
+    DECLARE done INT DEFAULT FALSE;
+
+    -- Cursor that depends on user input
+    DECLARE emp_cursor CURSOR FOR
+        SELECT Emp_Name, Salary FROM Employee WHERE Emp_id = p_emp_id;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN emp_cursor;
+
+    FETCH emp_cursor INTO v_emp_name, v_salary;
+    IF NOT done THEN
+        SELECT CONCAT('Employee Name: ', v_emp_name, ' | Salary: ', v_salary) AS Employee_Info;
+    ELSE
+        SELECT 'Employee ID not found' AS Employee_Info;
+    END IF;
+
+    CLOSE emp_cursor;
+END $$
+
+DELIMITER ;
+
+-- Run the procedure with user-specified employee ID
+-- Example: show salary for employee ID = 3
+CALL Show_Salary_By_ID(3);
+
+-- Try another example:
+CALL Show_Salary_By_ID(6);
+
+==========================================================

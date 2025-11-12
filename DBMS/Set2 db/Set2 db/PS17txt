@@ -1,0 +1,130 @@
+Problem Statement 17 (JOINS & SUBQUERIES USING MYSQL) 
+Consider Following Schema 
+Employee (Employee_id, First_name, Last_name , Hire_date, Salary, Job_title, Manager_id, department_id)
+ Departments(Department_id, Department_name, Manager_id, Location_id) 
+Locations(Location_id , Street_address , Postal_code, city, state, Country_id) 
+Manager(Manager_id, Manager_name)
+======================================================
+🗂️ Step 1: Create Tables with Foreign Keys
+
+CREATE TABLE Manager (
+  Manager_id INT PRIMARY KEY,
+  Manager_name VARCHAR(50)
+);
+
+CREATE TABLE Locations (
+  Location_id INT PRIMARY KEY,
+  Street_address VARCHAR(100),
+  Postal_code VARCHAR(10),
+  city VARCHAR(50),
+  state VARCHAR(50),
+  Country_id VARCHAR(10)
+);
+
+CREATE TABLE Departments (
+  Department_id INT PRIMARY KEY,
+  Department_name VARCHAR(50),
+  Manager_id INT,
+  Location_id INT,
+  FOREIGN KEY (Manager_id) REFERENCES Manager(Manager_id),
+  FOREIGN KEY (Location_id) REFERENCES Locations(Location_id)
+);
+
+CREATE TABLE Employee (
+  Employee_id INT PRIMARY KEY,
+  First_name VARCHAR(50),
+  Last_name VARCHAR(50),
+  Hire_date DATE,
+  Salary DECIMAL(10,2),
+  Job_title VARCHAR(50),
+  Manager_id INT,
+  Department_id INT,
+  FOREIGN KEY (Manager_id) REFERENCES Manager(Manager_id),
+  FOREIGN KEY (Department_id) REFERENCES Departments(Department_id)
+);
+
+
+🧪 Sample Input Data
+
+-- Managers
+INSERT INTO Manager VALUES
+(1, 'Rajiv Mehta'),
+(2, 'Sneha Joshi');
+
+-- Locations
+INSERT INTO Locations VALUES
+(101, 'MG Road', '411001', 'Pune', 'MH', 'IN'),
+(102, 'Brigade Road', '560001', 'Bangalore', 'KA', 'IN');
+
+-- Departments
+INSERT INTO Departments VALUES
+(10, 'IT', 1, 101),
+(20, 'HR', 2, 102),
+(30, 'Finance', 1, 101);
+
+-- Employees
+INSERT INTO Employee VALUES
+(1001, 'Amit', 'Sharma', '2010-06-15', 60000, 'Developer', 1, 10),
+(1002, 'Neha', 'Patil', '2005-03-20', 80000, 'Manager', 2, 10),
+(1003, 'Ravi', 'Deshmukh', '2012-11-01', 40000, 'Analyst', 1, 20),
+(1004, 'Sneha', 'Kulkarni', '2000-01-10', 90000, 'Manager', 2, 30),
+(1005, 'Kiran', 'Joshi', '2018-07-25', 30000, 'Intern', 1, 10);
+
+
+========================================================
+
+1. Write a query to find the names (first_name, last_name), the salary of the employees who earn more than
+ the average salary and who works in any of the IT departments.
+ 
+SELECT First_name, Last_name, Salary
+FROM Employee
+WHERE Salary > (
+  SELECT AVG(Salary)
+  FROM Employee
+  WHERE Department_id IN (
+    SELECT Department_id FROM Departments WHERE Department_name = 'IT'
+  )
+)
+AND Department_id IN (
+  SELECT Department_id FROM Departments WHERE Department_name = 'IT'
+);
+
+======================================================== 
+2. Write a query to find the names (first_name, last_name), the salary of the employees who earn the same
+ salary as the minimum salary for all departments. 
+ 
+ SELECT First_name, Last_name, Salary
+FROM Employee
+WHERE Salary = (
+  SELECT MIN(Salary) FROM Employee
+);
+=================================================
+ 
+3. Write a query to display the employee ID, first name, last names, salary of all employees whose salary is
+ above average for their departments.
+ 
+ SELECT e.Employee_id, e.First_name, e.Last_name, e.Salary
+FROM Employee e
+WHERE e.Salary > (
+  SELECT AVG(Salary)
+  FROM Employee
+  WHERE Department_id = e.Department_id
+);
+=========================================================
+ 
+4. Write a query to display the department name, manager name, and city. 
+
+SELECT d.Department_name, m.Manager_name, l.city
+FROM Departments d
+JOIN Manager m ON d.Manager_id = m.Manager_id
+JOIN Locations l ON d.Location_id = l.Location_id;
+==========================================================
+
+5. Write a query to display the name (first_name, last_name), hire date, salary of all managers whose
+ experience is more than 15 years.
+ 
+SELECT e.First_name, e.Last_name, e.Hire_date, e.Salary
+FROM Employee e
+WHERE e.Job_title = 'Manager'
+AND DATEDIFF(CURDATE(), e.Hire_date)/365 > 15;
+=======================================================

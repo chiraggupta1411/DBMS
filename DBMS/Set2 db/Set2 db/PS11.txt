@@ -1,0 +1,119 @@
+Problem Statement 11 (DDL USING MYSQL) 
+Create following tables using a given schema and insert appropriate data into the same:  
+Customer (CustID, Name, Cust_Address, Phone_no, Email_ID, Age)  
+Branch (Branch ID, Branch_Name, Address)  
+Account (Account_no, Branch ID, CustID, date_open, Account_type, Balance) 
+1. Create the tables with referential integrity. 
+2. Draw the ER diagram for the same. 
+3. Create an Index on primary key column of table Account 
+4. Create the view as Customer_Info displaying the customer details for age less than 45. 
+5. Update the View with open date as 16/4/2017 
+6. Create a sequence on Branch able. 
+7. Create synonym ‘Branch_info’ for branch table. 
+=======================================================================================
+
+-- ----------------------------------------------------
+-- Create and select the database
+-- ----------------------------------------------------
+CREATE DATABASE BankDB;
+USE BankDB;
+
+-- ----------------------------------------------------
+-- 1️⃣ Create tables with Referential Integrity
+-- ----------------------------------------------------
+
+-- Customer Table
+CREATE TABLE Customer (
+    CustID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(50) NOT NULL,
+    Cust_Address VARCHAR(100),
+    Phone_no VARCHAR(15),
+    Email_ID VARCHAR(50),
+    Age INT
+);
+
+-- Branch Table (AUTO_INCREMENT acts like a SEQUENCE)
+CREATE TABLE Branch (
+    Branch_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Branch_Name VARCHAR(50) NOT NULL,
+    Address VARCHAR(100)
+);
+
+-- Account Table (Foreign Keys to Branch & Customer)
+CREATE TABLE Account (
+    Account_no INT PRIMARY KEY AUTO_INCREMENT,
+    Branch_ID INT,
+    CustID INT,
+    date_open DATE,
+    Account_type VARCHAR(20),
+    Balance DECIMAL(12,2),
+    FOREIGN KEY (Branch_ID) REFERENCES Branch(Branch_ID),
+    FOREIGN KEY (CustID) REFERENCES Customer(CustID)
+);
+
+-- ----------------------------------------------------
+-- 2️⃣ Insert Sample Data
+-- ----------------------------------------------------
+INSERT INTO Customer (Name, Cust_Address, Phone_no, Email_ID, Age)
+VALUES 
+('Amit', 'Pune', '9876543210', 'amit@gmail.com', 30),
+('Riya', 'Mumbai', '9876501234', 'riya@yahoo.com', 42),
+('Kiran', 'Delhi', '9988776655', 'kiran@gmail.com', 50);
+
+INSERT INTO Branch (Branch_Name, Address)
+VALUES
+('Main Branch', 'Pune'),
+('South Branch', 'Mumbai');
+
+INSERT INTO Account (Branch_ID, CustID, date_open, Account_type, Balance)
+VALUES
+(1, 1, '2016-04-10', 'Savings', 50000),
+(1, 2, '2018-05-20', 'Current', 150000),
+(2, 3, '2019-07-01', 'Savings', 90000);
+
+-- ----------------------------------------------------
+-- 3️⃣ Create an Index on Primary Key of Account
+-- (MySQL auto-creates one, but for demonstration:)
+-- ----------------------------------------------------
+CREATE INDEX idx_account_no ON Account(Account_no);
+
+-- ----------------------------------------------------
+-- 4️⃣ Create a VIEW: Customer_Info
+-- Display customers with Age < 45
+-- ----------------------------------------------------
+CREATE VIEW Customer_Info AS
+SELECT CustID, Name, Cust_Address, Phone_no, Email_ID, Age
+FROM Customer
+WHERE Age < 45;
+
+-- ----------------------------------------------------
+-- 5️⃣ Update Account open date to '2017-04-16'
+-- for all customers under 45 (through the view)
+-- ----------------------------------------------------
+UPDATE Account
+SET date_open = '2017-04-16'
+WHERE CustID IN (SELECT CustID FROM Customer_Info);
+
+-- ----------------------------------------------------
+-- 6️⃣ Simulate a SEQUENCE for Branch using AUTO_INCREMENT
+-- (already handled by AUTO_INCREMENT in Branch table)
+-- ----------------------------------------------------
+-- To demonstrate, insert another branch without specifying ID:
+INSERT INTO Branch (Branch_Name, Address)
+VALUES ('East Branch', 'Chennai');
+
+-- ----------------------------------------------------
+-- 7️⃣ Create a SYNONYM (using VIEW in MySQL)
+-- ----------------------------------------------------
+CREATE VIEW Branch_info AS
+SELECT * FROM Branch;
+
+-- ----------------------------------------------------
+-- ✅ Verification Queries
+-- ----------------------------------------------------
+SELECT * FROM Customer;
+SELECT * FROM Branch;
+SELECT * FROM Account;
+SELECT * FROM Customer_Info;
+SELECT * FROM Branch_info;
+

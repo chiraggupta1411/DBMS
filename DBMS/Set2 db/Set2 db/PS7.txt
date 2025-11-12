@@ -1,0 +1,79 @@
+Problem Statement 7 (Map Reduce) 
+Create Book Collection with (Title, Author_name, Borrowed_status) as fields. Write Map Reduce Functions for
+ following requirements. 
+1. Display Author wise list of books. 
+2. Display Author wise list of books having Borrowed status as “True”. 
+3. Display Author wise list of books having price greater than 300. 
+======================================================================================
+
+
+// ----------------------------------------------------------
+// 1️⃣ Create Database
+// ----------------------------------------------------------
+use LibraryDB;
+
+// ----------------------------------------------------------
+// 2️⃣ Drop collection if it exists
+// ----------------------------------------------------------
+db.BookCollection.drop();
+
+// ----------------------------------------------------------
+// 3️⃣ Insert Sample Data
+// ----------------------------------------------------------
+db.BookCollection.insertMany([
+    { Title: "Book A", Author_name: "Author 1", Borrowed_status: true, Price: 250 },
+    { Title: "Book B", Author_name: "Author 1", Borrowed_status: false, Price: 320 },
+    { Title: "Book C", Author_name: "Author 2", Borrowed_status: true, Price: 400 },
+    { Title: "Book D", Author_name: "Author 2", Borrowed_status: false, Price: 280 },
+    { Title: "Book E", Author_name: "Author 3", Borrowed_status: true, Price: 350 },
+    { Title: "Book F", Author_name: "Author 3", Borrowed_status: false, Price: 200 },
+    { Title: "Book G", Author_name: "Author 1", Borrowed_status: true, Price: 500 },
+    { Title: "Book H", Author_name: "Author 2", Borrowed_status: true, Price: 150 },
+    { Title: "Book I", Author_name: "Author 3", Borrowed_status: false, Price: 450 },
+    { Title: "Book J", Author_name: "Author 1", Borrowed_status: false, Price: 330 }
+]);
+
+// ----------------------------------------------------------
+// 4️⃣ MapReduce 1: Author wise list of all books
+// ----------------------------------------------------------
+
+var mapAllBooks = function() {
+    emit(this.Author_name, this.Title);
+};
+
+var reduceBooks = function(key, values) {
+    return values;
+};
+
+print(" Author wise list of all books:");
+db.BookCollection.mapReduce(mapAllBooks, reduceBooks, { out: { inline: 1 } });
+
+
+// ----------------------------------------------------------
+// 5️⃣ MapReduce 2: Author wise list of books with Borrowed_status = true
+// ----------------------------------------------------------
+var mapBorrowedBooks = function() {
+    if (this.Borrowed_status === true) {
+        emit(this.Author_name, this.Title);
+    }
+};
+
+print(" Author wise list of borrowed books:");
+db.BookCollection.mapReduce(mapBorrowedBooks, reduceBooks, { out: { inline: 1 } });
+
+
+
+// ----------------------------------------------------------
+// 6️⃣ MapReduce 3: Author wise list of books with Price > 300
+// ----------------------------------------------------------
+var mapExpensiveBooks = function() {
+    if (this.Price > 300) {
+        emit(this.Author_name, this.Title);
+    }
+};
+
+print(" Author wise list of books with price > 300:");
+db.BookCollection.mapReduce(mapExpensiveBooks, reduceBooks, { out: { inline: 1 } });
+
+********************************************************************
+

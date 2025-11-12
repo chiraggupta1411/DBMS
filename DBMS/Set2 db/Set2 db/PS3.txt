@@ -1,0 +1,134 @@
+Problem Statement 3 (Unnamed Block) 
+Employee( emp_id, dept_idemp_name, DoJ, salary, commission,job_title) 
+Salary_Increment(emp_id, new_salary) 
+Consider the schema given above. Write a PLSQL Unnamed Block of code to increase the salary of employee
+ 115 based on the following conditions:  
+Accept emp_id from user. If experience of employee is more than 10 years, increase salary by 20%. If experience
+ is greater than 5 years, increase salary by 10% Otherwise 5%. (Hint: Find the years of experience from Date of
+ Joining (DoJ)). Store the incremented salary in Salary_Increment table. 
+Also handle the exception by named exception handler or user defined exception handler.
+==========================================================================================
+
+
+-- ----------------------------------------------------------
+-- 1️⃣ Use / Create Database
+-- ----------------------------------------------------------
+DROP DATABASE IF EXISTS CompanyDB;
+CREATE DATABASE CompanyDB;
+USE CompanyDB;
+
+-- ----------------------------------------------------------
+-- 2️⃣ Drop Tables if exist
+-- ----------------------------------------------------------
+DROP TABLE IF EXISTS Employee;
+DROP TABLE IF EXISTS Salary_Increment;
+
+-- ----------------------------------------------------------
+-- 3️⃣ Create Employee Table
+-- ----------------------------------------------------------
+CREATE TABLE Employee (
+    emp_id INT PRIMARY KEY,
+    dept_id INT,
+    emp_name VARCHAR(50),
+    DoJ DATE,
+    salary DECIMAL(10,2),
+    commission DECIMAL(10,2),
+    job_title VARCHAR(50)
+);
+
+-- ----------------------------------------------------------
+-- 4️⃣ Create Salary_Increment Table
+-- ----------------------------------------------------------
+CREATE TABLE Salary_Increment (
+    emp_id INT PRIMARY KEY,
+    new_salary DECIMAL(10,2)
+);
+
+-- ----------------------------------------------------------
+-- 5️⃣ Insert Sample Data
+-- ----------------------------------------------------------
+INSERT INTO Employee (emp_id, dept_id, emp_name, DoJ, salary, commission, job_title) VALUES
+(115, 1, 'Amit Kumar', '2010-03-15', 50000, NULL, 'Manager'),
+(116, 2, 'Riya Sharma', '2018-06-10', 40000, NULL, 'Analyst'),
+(117, 1, 'Neha Singh', '2021-01-25', 30000, NULL, 'Executive');
+
+-- ----------------------------------------------------------
+-- 6️⃣ Anonymous Block to Increment Salary
+-- ----------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE Increment_Salary(IN input_emp_id INT)
+BEGIN
+    DECLARE emp_salary DECIMAL(10,2);
+    DECLARE emp_doj DATE;
+    DECLARE experience INT;
+    DECLARE incremented_salary DECIMAL(10,2);
+    DECLARE emp_exists INT;
+
+    -- Check if employee exists
+    SELECT COUNT(*) INTO emp_exists FROM Employee WHERE emp_id = input_emp_id;
+
+    IF emp_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Employee ID does not exist';
+    ELSE
+        -- Get current salary and DoJ
+        SELECT salary, DoJ INTO emp_salary, emp_doj
+        FROM Employee
+        WHERE emp_id = input_emp_id;
+
+        -- Calculate experience in years
+        SET experience = TIMESTAMPDIFF(YEAR, emp_doj, CURDATE());
+
+        -- Calculate incremented salary based on experience
+        IF experience > 10 THEN
+            SET incremented_salary = emp_salary * 1.20;
+        ELSEIF experience > 5 THEN
+            SET incremented_salary = emp_salary * 1.10;
+        ELSE
+            SET incremented_salary = emp_salary * 1.05;
+        END IF;
+
+        -- Insert or update into Salary_Increment table
+        INSERT INTO Salary_Increment(emp_id, new_salary)
+        VALUES (input_emp_id, incremented_salary)
+        ON DUPLICATE KEY UPDATE new_salary = incremented_salary;
+
+        -- Display the result
+        SELECT CONCAT('Employee ID: ', input_emp_id, ', Old Salary: ', emp_salary,
+                      ', New Salary: ', incremented_salary) AS Result;
+    END IF;
+
+END $$
+
+DELIMITER ;
+
+-- ----------------------------------------------------------
+-- 7️⃣ Call the Procedure (example for employee 115)
+-- ----------------------------------------------------------
+CALL Increment_Salary(115);
+
+-- ----------------------------------------------------------
+-- 8️⃣ View Salary_Increment Table
+-- ----------------------------------------------------------
+SELECT * FROM Salary_Increment;
+
+****************************************************************************************
+
+---
+
+### ✅ **What This Script Does**
+
+1. Creates **Employee** and **Salary_Increment** tables.
+2. Inserts **sample employees**, including `emp_id = 115`.
+3. Creates a **stored procedure `Increment_Salary`** that:
+
+   * Accepts `emp_id`
+   * Calculates experience from `DoJ`
+   * Determines salary increment: 20%, 10%, 5% based on experience
+   * Inserts/updates the incremented salary in `Salary_Increment`
+   * Handles **non-existent employee** via a **user-defined exception**
+4. Displays a **formatted result** and lets you query `Salary_Increment` to verify.
+
+---
+
+

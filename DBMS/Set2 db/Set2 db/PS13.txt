@@ -1,0 +1,97 @@
+Problem Statement 13 (Map Reduce) 
+Create collection for Student{roll_no, name, class, dept, aggregate_marks}. Write Map Reduce Functions for
+ following requirements. 
+
+
+=====================================================================
+
+use StudentDB
+
+db.createCollection("Student")
+
+
+db.Student.insertMany([
+  { roll_no: 1, name: "Amit", class: "TE", dept: "Computer", aggregate_marks: 78 },
+  { roll_no: 2, name: "Neha", class: "TE", dept: "IT", aggregate_marks: 85 },
+  { roll_no: 3, name: "Ravi", class: "SE", dept: "Computer", aggregate_marks: 92 },
+  { roll_no: 4, name: "Sneha", class: "SE", dept: "IT", aggregate_marks: 88 },
+  { roll_no: 5, name: "Kiran", class: "BE", dept: "Computer", aggregate_marks: 75 },
+  { roll_no: 6, name: "Anjali", class: "BE", dept: "IT", aggregate_marks: 80 }
+]);
+
+==============================
+
+//1. Finding the total marks of students of “TE” class department-wise. 
+db.Student.mapReduce(
+  function () {
+    if (this.class === "TE") {
+      emit(this.dept, this.aggregate_marks);
+    }
+  },
+  function (key, values) {
+    return Array.sum(values);
+  },
+  {
+    out: "TotalMarks_TE"
+  }
+);
++++++++++++++++
+db.TotalMarks_TE.find().pretty()
+
+=====================================================================
+
+//2. Finding the highest marks of students of “SE” class department-wise. 
+
+db.Student.mapReduce(
+  function () {
+    if (this.class === "SE") {
+      emit(this.dept, this.aggregate_marks);
+    }
+  },
+  function (key, values) {
+    return Math.max.apply(null, values);
+  },
+  {
+    out: "HighestMarks_SE"
+  }
+);
+
++++++++++++++
+db.HighestMarks_SE.find().pretty()
+
+
+=====================================================
+
+//3. Find Average marks of students of “BE” class department-wise. 
+
+
+db.Student.mapReduce(
+  function () {
+    if (this.class === "BE") {
+      emit(this.dept, { total: this.aggregate_marks, count: 1 });
+    }
+  },
+  function (key, values) {
+    var total = 0;
+    var count = 0;
+    values.forEach(function (val) {
+      total += val.total;
+      count += val.count;
+    });
+    return total / count;
+  },
+  {
+    out: "AverageMarks_BE"
+  }
+);
+
+++++++++++++=
+db.AverageMarks_BE.find().pretty()
+==========================================
+
+All output together 
+
+db.TotalMarks_TE.find().pretty();
+db.HighestMarks_SE.find().pretty();
+db.AverageMarks_BE.find().pretty();
+******************************************************************

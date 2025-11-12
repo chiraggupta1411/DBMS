@@ -1,0 +1,77 @@
+Problem Statement 10 (CRUD) 
+Create a collection Social_Media having fields as User_Id, User_Name, No_of_Posts, No_of_Friends,
+ Friends_List, Interests. (Hint: Friends_List and Interests can be of array type) 
+I nsert 20 documents in the collection Social_Media. Write queries for following. 
+1. List all the users from collection Social_Media in formatted manner. 
+2. Find all users having number of posts greater than 100. 
+3. List the user names and their respective Friens_List 
+4. Display the user ids and Friends list of users who have more than 5 friends. 
+5. Display all users with no of posts in descending order. 
+
+=============================================================================
+
+// ------------------------------------------------------
+// Use or Create Database
+// ------------------------------------------------------
+use SocialDB
+
+// ------------------------------------------------------
+// 1️⃣ Create Collection: Social_Media
+// ------------------------------------------------------
+db.createCollection("Social_Media")
+
+// ------------------------------------------------------
+// 2️⃣ Insert 20 Sample Documents
+// ------------------------------------------------------
+db.Social_Media.insertMany([
+  { User_Id: 1,  User_Name: "Amit",    No_of_Posts: 120, No_of_Friends: 8, Friends_List: ["Riya", "Neha", "Raj", "Kiran", "Meena", "Rohit", "Anjali", "Vivek"], Interests: ["Photography", "Travel", "Food"] },
+  { User_Id: 2,  User_Name: "Riya",    No_of_Posts: 85,  No_of_Friends: 4, Friends_List: ["Amit", "Neha", "Kiran", "Vivek"], Interests: ["Music", "Movies"] },
+  { User_Id: 3,  User_Name: "Neha",    No_of_Posts: 150, No_of_Friends: 6, Friends_List: ["Amit", "Riya", "Raj", "Kiran", "Rohit", "Vivek"], Interests: ["Cooking", "Dance", "Art"] },
+  { User_Id: 4,  User_Name: "Raj",     No_of_Posts: 60,  No_of_Friends: 3, Friends_List: ["Amit", "Neha", "Riya"], Interests: ["Gaming", "Movies"] },
+  { User_Id: 5,  User_Name: "Kiran",   No_of_Posts: 200, No_of_Friends: 7, Friends_List: ["Amit", "Riya", "Neha", "Raj", "Rohit", "Anjali", "Meena"], Interests: ["Travel", "Fitness"] },
+  { User_Id: 6,  User_Name: "Meena",   No_of_Posts: 45,  No_of_Friends: 2, Friends_List: ["Kiran", "Amit"], Interests: ["Books", "Cooking"] },
+  { User_Id: 7,  User_Name: "Rohit",   No_of_Posts: 110, No_of_Friends: 9, Friends_List: ["Amit", "Kiran", "Neha", "Raj", "Riya", "Vivek", "Meena", "Anjali", "Tina"], Interests: ["Tech", "Sports", "Music"] },
+  { User_Id: 8,  User_Name: "Anjali",  No_of_Posts: 90,  No_of_Friends: 5, Friends_List: ["Amit", "Rohit", "Kiran", "Meena", "Tina"], Interests: ["Art", "Photography"] },
+  { User_Id: 9,  User_Name: "Vivek",   No_of_Posts: 130, No_of_Friends: 6, Friends_List: ["Riya", "Neha", "Rohit", "Amit", "Kiran", "Tina"], Interests: ["Coding", "Gaming", "Travel"] },
+  { User_Id: 10, User_Name: "Tina",    No_of_Posts: 170, No_of_Friends: 10, Friends_List: ["Rohit", "Amit", "Anjali", "Vivek", "Kiran", "Riya", "Neha", "Raj", "Meena", "Sam"], Interests: ["Music", "Dance"] },
+  { User_Id: 11, User_Name: "Sam",     No_of_Posts: 50,  No_of_Friends: 3, Friends_List: ["Tina", "Rohit", "Kiran"], Interests: ["Movies", "Sports"] },
+  { User_Id: 12, User_Name: "Nisha",   No_of_Posts: 105, No_of_Friends: 7, Friends_List: ["Amit", "Riya", "Neha", "Raj", "Kiran", "Vivek", "Rohit"], Interests: ["Reading", "Travel"] },
+  { User_Id: 13, User_Name: "Priya",   No_of_Posts: 80,  No_of_Friends: 5, Friends_List: ["Riya", "Neha", "Kiran", "Vivek", "Meena"], Interests: ["Fashion", "Music"] },
+  { User_Id: 14, User_Name: "Arjun",   No_of_Posts: 95,  No_of_Friends: 4, Friends_List: ["Rohit", "Amit", "Raj", "Vivek"], Interests: ["Cricket", "Fitness"] },
+  { User_Id: 15, User_Name: "Sneha",   No_of_Posts: 180, No_of_Friends: 6, Friends_List: ["Amit", "Riya", "Neha", "Vivek", "Kiran", "Rohit"], Interests: ["Photography", "Cooking"] },
+  { User_Id: 16, User_Name: "Deepak",  No_of_Posts: 70,  No_of_Friends: 2, Friends_List: ["Amit", "Raj"], Interests: ["Movies", "Reading"] },
+  { User_Id: 17, User_Name: "Sita",    No_of_Posts: 115, No_of_Friends: 8, Friends_List: ["Riya", "Neha", "Kiran", "Amit", "Rohit", "Meena", "Anjali", "Vivek"], Interests: ["Travel", "Yoga"] },
+  { User_Id: 18, User_Name: "Manish",  No_of_Posts: 40,  No_of_Friends: 3, Friends_List: ["Amit", "Rohit", "Vivek"], Interests: ["Tech", "Movies"] },
+  { User_Id: 19, User_Name: "Komal",   No_of_Posts: 95,  No_of_Friends: 4, Friends_List: ["Riya", "Neha", "Kiran", "Meena"], Interests: ["Art", "Photography"] },
+  { User_Id: 20, User_Name: "Vikas",   No_of_Posts: 155, No_of_Friends: 7, Friends_List: ["Rohit", "Tina", "Riya", "Neha", "Vivek", "Amit", "Kiran"], Interests: ["Fitness", "Music", "Travel"] }
+])
+
+// ------------------------------------------------------
+// 3️⃣ Queries as per the Question
+// ------------------------------------------------------
+
+// 1. List all the users in formatted manner
+print("All Users (Formatted):")
+db.Social_Media.find().pretty()
+=======================================
+
+// 2. Find all users having number of posts greater than 100
+print("Users having more than 100 posts:")
+db.Social_Media.find({ No_of_Posts: { $gt: 100 } }).pretty()
+========================================
+
+// 3. List the user names and their respective Friends_List
+print("User Names and their Friends List:")
+db.Social_Media.find({}, { _id: 0, User_Name: 1, Friends_List: 1 }).pretty()
+=======================================
+
+// 4. Display the user ids and Friends list of users who have more than 5 friends
+print("User IDs and Friends List (More than 5 Friends):")
+db.Social_Media.find({ No_of_Friends: { $gt: 5 } }, { _id: 0, User_Id: 1, Friends_List: 1 }).pretty()
+=====================================
+
+// 5. Display all users with number of posts in descending order
+print("All Users Sorted by No_of_Posts (Descending):")
+db.Social_Media.find().sort({ No_of_Posts: -1 }).pretty()
+******************************************************************
+

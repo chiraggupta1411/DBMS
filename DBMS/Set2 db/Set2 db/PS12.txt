@@ -1,0 +1,102 @@
+Problem Statement 12 (Triggers) 
+Employee( emp_id, dept_idemp_name, DoJ, salary, commission,job_title)  
+Consider the schema given above for Write a PLSQL Program to  
+1. Create a Trigger to ensure the salary of the employee is not decreased.  
+2. Whenever the job title is changed for an employee write the following details into job_history table. Employee
+ ID, old job title, old department ID, DoJ for start date, system date for end date. 
+ ================================================================================================
+ 
+CREATE TABLE Employee (
+    emp_id INT PRIMARY KEY,
+    emp_name VARCHAR(50),
+    dept_id INT,
+    DoJ DATE,
+    salary DECIMAL(10,2),
+    commission DECIMAL(10,2),
+    job_title VARCHAR(50)
+);
+
+
+CREATE TABLE job_history (
+    emp_id INT,
+    old_job_title VARCHAR(50),
+    old_dept_id INT,
+    start_date DATE,
+    end_date DATE
+);
+
+
+===================================================
+
+//1. Create a Trigger to ensure the salary of the employee is not decreased.
+
+⚙️ Requirement 1: Create a trigger to ensure salary is not decreased
+🧩 Logic
+Whenever an update happens on the Employee table, we check:
+If the new salary (NEW.salary) is less than the old salary (OLD.salary),
+then throw an error to prevent the update.
+
+✅ Trigger 1: Prevent Salary Decrease
+
+DELIMITER $$
+
+CREATE TRIGGER prevent_salary_decrease
+BEFORE UPDATE ON Employee
+FOR EACH ROW
+BEGIN
+    IF NEW.salary < OLD.salary THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: Salary cannot be decreased!';
+    END IF;
+END $$
+
+DELIMITER ;
+
+============================================================================
+
+//2. Whenever the job title is changed for an employee write the following details into job_history table. Employee
+ ID, old job title, old department ID, DoJ for start date, system date for end date. 
+ 
+⚙️ Requirement 2: Whenever job title changes, log old details in job_history
+
+
+✅ Trigger 2: Record Job Change
+
+
+DELIMITER $$
+
+CREATE TRIGGER log_job_change
+AFTER UPDATE ON Employee
+FOR EACH ROW
+BEGIN
+    IF NEW.job_title <> OLD.job_title THEN
+        INSERT INTO job_history(emp_id, old_job_title, old_dept_id, start_date, end_date)
+        VALUES (OLD.emp_id, OLD.job_title, OLD.dept_id, OLD.DoJ, CURDATE());
+    END IF;
+END $$
+
+DELIMITER ;
+
+======================================================================
+
+🧮 Testing the Triggers
+Insert some initial data
+INSERT INTO Employee VALUES
+(1, 'Amit', 101, '2020-06-15', 50000, 2000, 'Developer'),
+(2, 'Riya', 102, '2021-02-10', 60000, 1500, 'Analyst');
+++++++++++++++++++++++++++++++
+Test 1: Try reducing salary (should fail)
+UPDATE Employee
+SET salary = 45000
+WHERE emp_id = 1;
++++++++++++++++++++++++++++++
+Test 2: Change job title (should log history)
+UPDATE Employee
+SET job_title = 'Senior Developer'
+WHERE emp_id = 1;
+
+
+Now check the job_history table:
+
+SELECT * FROM job_history;
+**************************************************************

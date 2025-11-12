@@ -1,0 +1,98 @@
+Problem Statement 18 (Procedures / Functions) 
+Consider following schema for Bank database.  
+Account(Account_No, Cust_Name, Balance, NoOfYears)  
+Earned_Interest(Account_No, Interest_Amt)
+=========================================================================
+Logic:
+Simple Interest = Balance×Rate×NoOfYears/100
+
+//1. Write a PL/SQL procedure for following requirement. Take as input Account_No and Interest Rate from User.
+ Calculate the Interest_Amt as simple interest for the given Account_No and store it in Earned_Interest table.
+ Display all the details of Earned_Interest Table. 
+
+🗂️ Step 1: Create Tables
+
+CREATE TABLE Account (
+  Account_No INT PRIMARY KEY,
+  Cust_Name VARCHAR(50),
+  Balance DECIMAL(10,2),
+  NoOfYears INT
+);
+
+CREATE TABLE Earned_Interest (
+  Account_No INT,
+  Interest_Amt DECIMAL(10,2)
+);
+===============================
+🧪 Sample Input Data
+
+INSERT INTO Account VALUES
+(101, 'Amit Sharma', 60000, 3),
+(102, 'Neha Patil', 45000, 2),
+(103, 'Ravi Deshmukh', 80000, 5),
+(104, 'Sneha Kulkarni', 30000, 1);
+================================
+
+
+MySQL Procedure
+
+DELIMITER //
+
+CREATE PROCEDURE Calculate_Interest (
+  IN p_Account_No INT,
+  IN p_Rate DECIMAL(5,2)
+)
+BEGIN
+  DECLARE v_Balance DECIMAL(10,2);
+  DECLARE v_Years INT;
+  DECLARE v_Interest DECIMAL(10,2);
+
+  SELECT Balance, NoOfYears INTO v_Balance, v_Years
+  FROM Account
+  WHERE Account_No = p_Account_No;
+
+  SET v_Interest = (v_Balance * p_Rate * v_Years) / 100;
+
+  INSERT INTO Earned_Interest (Account_No, Interest_Amt)
+  VALUES (p_Account_No, v_Interest);
+END;
+//
+
+DELIMITER ;
+==============================================
+Execute Procedure
+
+CALL Calculate_Interest(101, 5.0);
+CALL Calculate_Interest(103, 4.5);
+===================================
+View Earned Interest Table
+
+SELECT * FROM Earned_Interest;
+**********************************************************************
+
+
+
+2. Write a PLSQL function to display all records from Account table having Balance greater than 50,000.
+🧠 2. Function: Display Accounts with Balance > 50000
+
+DELIMITER //
+
+CREATE FUNCTION Get_HighBalance_Accounts()
+RETURNS INT
+DETERMINISTIC
+BEGIN
+  RETURN (
+    SELECT COUNT(*) FROM Account WHERE Balance > 50000
+  );
+END;
+//
+
+DELIMITER ;
+===========================================
+Execute Function
+sql
+SELECT * FROM Account WHERE Balance > 50000;
+SELECT Get_HighBalance_Accounts();
+ 
+=========================================== 
+

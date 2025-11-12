@@ -1,0 +1,144 @@
+Problem Statement 2 (DDL USING MYSQL) 
+Create following tables using a given schema and insert appropriate data into the same:  
+Customer (CustID, Name, Cust_Address, Phone_no, Email_ID, Age)  
+Branch (Branch ID, Branch_Name, Address)  
+Account (Account_no, Branch ID, CustID, open_date, Account_type, Balance) 
+1. Create the tables with referential integrity. 
+2. Draw the ER diagram for the same. 
+3. Create a View as Saving account displaying the customer details with the open date as 16/8/2018. 
+4. Update the View with Cust_Address as Pune for CustID =103. 
+5. Create a View as Loan account displaying the customer details with the open date as 16/2/2018. 
+6. Create an Index on primary key column of table Customer. 
+7. Create an Index on primary key column of table Branch. 
+8. Create a sequence on Customer Table. 
+9. Create synonym ‘Cust_info’ for branch table. 
+
+======================================================================================
+
+
+-- ----------------------------------------------------------
+-- 1️⃣ Create / Use Database
+-- ----------------------------------------------------------
+DROP DATABASE IF EXISTS BankDB;
+CREATE DATABASE BankDB;
+USE BankDB;
+
+-- ----------------------------------------------------------
+-- 2️⃣ Drop Tables if exist
+-- ----------------------------------------------------------
+DROP TABLE IF EXISTS Account;
+DROP TABLE IF EXISTS Customer;
+DROP TABLE IF EXISTS Branch;
+
+-- ----------------------------------------------------------
+-- 3️⃣ Create Tables with Referential Integrity
+-- ----------------------------------------------------------
+CREATE TABLE Customer (
+    CustID INT NOT NULL,
+    Name VARCHAR(50),
+    Cust_Address VARCHAR(100),
+    Phone_no VARCHAR(15),
+    Email_ID VARCHAR(50),
+    Age INT,
+    PRIMARY KEY(CustID)
+);
+
+CREATE TABLE Branch (
+    Branch_ID INT PRIMARY KEY,
+    Branch_Name VARCHAR(50),
+    Address VARCHAR(100)
+);
+
+CREATE TABLE Account (
+    Account_no INT PRIMARY KEY,
+    Branch_ID INT,
+    CustID INT,
+    open_date DATE,
+    Account_type VARCHAR(20),
+    Balance DECIMAL(10,2),
+    FOREIGN KEY (Branch_ID) REFERENCES Branch(Branch_ID),
+    FOREIGN KEY (CustID) REFERENCES Customer(CustID)
+);
+
+-- ----------------------------------------------------------
+-- 4️⃣ Insert Sample Data
+-- ----------------------------------------------------------
+INSERT INTO Customer (CustID, Name, Cust_Address, Phone_no, Email_ID, Age) VALUES
+(101, 'Amit Kumar', 'Mumbai', '9876543210', 'amit@gmail.com', 35),
+(102, 'Riya Sharma', 'Delhi', '9876543211', 'riya@gmail.com', 42),
+(103, 'Neha Singh', 'Bangalore', '9876543212', 'neha@gmail.com', 38),
+(104, 'Raj Patel', 'Chennai', '9876543213', 'raj@gmail.com', 45);
+
+INSERT INTO Branch (Branch_ID, Branch_Name, Address) VALUES
+(1, 'East Branch', 'Mumbai'),
+(2, 'West Branch', 'Delhi');
+
+INSERT INTO Account (Account_no, Branch_ID, CustID, open_date, Account_type, Balance) VALUES
+(201, 1, 101, '2018-08-16', 'Saving', 50000),
+(202, 1, 102, '2018-02-16', 'Loan', 150000),
+(203, 2, 103, '2018-08-16', 'Saving', 70000),
+(204, 2, 104, '2018-02-16', 'Loan', 120000);
+
+-- ----------------------------------------------------------
+-- 5️⃣ Create View for Saving Account (open_date = 16/8/2018)
+-- ----------------------------------------------------------
+CREATE OR REPLACE VIEW Saving_Account AS
+SELECT c.CustID, c.Name, c.Cust_Address, c.Phone_no, c.Email_ID, c.Age, a.Account_no, a.Balance
+FROM Customer c
+JOIN Account a ON c.CustID = a.CustID
+WHERE a.Account_type = 'Saving' AND a.open_date = '2018-08-16';
+
+-- ----------------------------------------------------------
+-- 6️⃣ Update View: Set Cust_Address='Pune' for CustID=103
+-- Note: Views with JOIN are not directly updatable, update the table
+-- ----------------------------------------------------------
+UPDATE Customer
+SET Cust_Address = 'Pune'
+WHERE CustID = 103;
+
+-- ----------------------------------------------------------
+-- 7️⃣ Create View for Loan Account (open_date = 16/2/2018)
+-- ----------------------------------------------------------
+CREATE OR REPLACE VIEW Loan_Account AS
+SELECT c.CustID, c.Name, c.Cust_Address, c.Phone_no, c.Email_ID, c.Age, a.Account_no, a.Balance
+FROM Customer c
+JOIN Account a ON c.CustID = a.CustID
+WHERE a.Account_type = 'Loan' AND a.open_date = '2018-02-16';
+
+-- ----------------------------------------------------------
+-- 8️⃣ Create Index on Primary Key of Customer Table
+-- ----------------------------------------------------------
+CREATE INDEX idx_customer_pk ON Customer(CustID);
+
+-- ----------------------------------------------------------
+-- 9️⃣ Create Index on Primary Key of Branch Table
+-- ----------------------------------------------------------
+CREATE INDEX idx_branch_pk ON Branch(Branch_ID);
+
+-- ----------------------------------------------------------
+-- 🔟 Create AUTO_INCREMENT for Customer Table safely
+-- Step 1: Drop foreign key temporarily
+-- ----------------------------------------------------------
+ALTER TABLE Account DROP FOREIGN KEY Account_ibfk_2;
+
+-- Step 2: Modify CustID to AUTO_INCREMENT
+ALTER TABLE Customer MODIFY CustID INT NOT NULL AUTO_INCREMENT;
+
+-- Step 3: Re-add foreign key constraint
+ALTER TABLE Account
+ADD CONSTRAINT Account_ibfk_2
+FOREIGN KEY (CustID) REFERENCES Customer(CustID);
+
+-- ----------------------------------------------------------
+-- 1️⃣1️⃣ Create Synonym for Branch Table (using VIEW)
+-- ----------------------------------------------------------
+CREATE OR REPLACE VIEW Cust_info AS
+SELECT * FROM Branch;
+
+-- ----------------------------------------------------------
+-- 1️⃣2️⃣ Test: Display Views
+-- ----------------------------------------------------------
+SELECT * FROM Saving_Account;
+SELECT * FROM Loan_Account;
+SELECT * FROM Cust_info;
+

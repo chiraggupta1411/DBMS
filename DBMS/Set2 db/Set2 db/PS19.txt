@@ -1,0 +1,73 @@
+Problem Statement 19 (Aggregation & Indexing) 
+Create the Collection Movies_Data( Movie_ID, Movie_Name, Director, Genre, BoxOfficeCollection) and
+ solve the following:     
+ ===================================================== 
+ 
+use MoviesDB
+
+db.createCollection("Movies_Data")
+//insert data
+db.Movies_Data.insertMany([
+  { Movie_ID: 1, Movie_Name: "Inception", Director: "Christopher Nolan", Genre: "Sci-Fi", BoxOfficeCollection: 830 },
+  { Movie_ID: 2, Movie_Name: "Interstellar", Director: "Christopher Nolan", Genre: "Sci-Fi", BoxOfficeCollection: 677 },
+  { Movie_ID: 3, Movie_Name: "Avatar", Director: "James Cameron", Genre: "Fantasy", BoxOfficeCollection: 2847 },
+  { Movie_ID: 4, Movie_Name: "Titanic", Director: "James Cameron", Genre: "Romance", BoxOfficeCollection: 2200 },
+  { Movie_ID: 5, Movie_Name: "Jurassic Park", Director: "Steven Spielberg", Genre: "Adventure", BoxOfficeCollection: 1030 }
+])
+
+//To check
+db.Movies_Data.find().pretty()
+=======================================
+
+//1.Display a list stating how many Movies are directed by each “Director”.
+db.Movies_Data.aggregate([
+  { $group: { _id: "$Director", TotalMovies: { $sum: 1 } } }
+])
+=================================================
+//2.Display list of Movies with the highest BoxOfficeCollection in each Genre. 
+db.Movies_Data.aggregate([
+  { $sort: { BoxOfficeCollection: -1 } },
+  { $group: {
+      _id: "$Genre",
+      Movie_Name: { $first: "$Movie_Name" },
+      Director: { $first: "$Director" },
+      BoxOfficeCollection: { $first: "$BoxOfficeCollection" }
+  }}
+])
+========================================================
+//3.Display list of Movies with the highest BoxOfficeCollection in each Genre in ascending order
+ of BoxOfficeCollection.
+ 
+ db.Movies_Data.aggregate([
+  { $sort: { BoxOfficeCollection: -1 } },
+  { $group: {
+      _id: "$Genre",
+      Movie_Name: { $first: "$Movie_Name" },
+      Director: { $first: "$Director" },
+      BoxOfficeCollection: { $first: "$BoxOfficeCollection" }
+  }},
+  { $sort: { BoxOfficeCollection: 1 } }
+])
+
+===============================================
+//4.Create an index on field Movie_ID. 
+db.Movies_Data.createIndex({ Movie_ID: 1 })
+
+===========================================
+//5.Create an index on fields ” Movie_Name” and ” Director”. 
+db.Movies_Data.createIndex({ Movie_Name: 1, Director: 1 })
+
+
+✅ To check which indexes exist:
+
+db.Movies_Data.getIndexes()
+=================================================
+//6.Drop an index on field  Movie_ID. 
+
+db.Movies_Data.dropIndex({ Movie_ID: 1 })
+=======================================================
+//7.Drop an index on fields ” Movie_Name” and ” Director”.
+
+db.Movies_Data.dropIndex({ Movie_Name: 1, Director: 1 })
+
+
